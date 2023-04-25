@@ -8,7 +8,8 @@ createBinaryTreeTests = TestList [
     testEmptyList,
     testSingleElement,
     testEvenElements,
-    testOddElements
+    testOddElements,
+    testManyElements
   ]
 
 testEmptyList :: Test
@@ -21,8 +22,12 @@ testSingleElement = TestCase $ do
 
 testEvenElements :: Test
 testEvenElements = TestCase $ do
-  assertEqual "tree with even number of elements should have correct structure" (Node 3 (Node 1 EmptyTree EmptyTree) (Node 5 EmptyTree EmptyTree)) (createBinaryTree [1,3,5])
+  assertEqual "tree with even number of elements should have correct structure" (Node 3 (Node 1 EmptyTree EmptyTree) (Node 5 EmptyTree EmptyTree)) (createBinaryTree [3, 1, 5])
 
 testOddElements :: Test
 testOddElements = TestCase $ do
-  assertEqual "tree with odd number of elements should have correct structure" (Node 3 (Node 1 EmptyTree EmptyTree) (Node 5 (Node 4 EmptyTree EmptyTree) EmptyTree)) (createBinaryTree [1,3,4,5])
+  assertEqual "tree with odd number of elements should have correct structure" (Node 3 (Node 1 EmptyTree EmptyTree) (Node 4 EmptyTree (Node 5 EmptyTree EmptyTree))) (createBinaryTree [3, 1, 4, 5])
+
+testManyElements :: Test
+testManyElements = TestCase $ do
+  assertEqual "tree with many elements should have correct structure" (Node 4 (Node 2 (Node 1 EmptyTree EmptyTree) (Node 3 EmptyTree EmptyTree)) (Node 6 (Node 5 EmptyTree EmptyTree) (Node 7 EmptyTree EmptyTree))) (createBinaryTree [4, 2, 1, 3, 6, 5, 7])
