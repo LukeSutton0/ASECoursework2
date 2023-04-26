@@ -1,11 +1,12 @@
-module DictionaryTests (createDictionaryTests) where
+module DictionaryTests (dictionaryTests) where
 
 import Test.HUnit
+import Test.QuickCheck
 import Dictionary
 
 -- | Test cases for `Dictionary Tests` 
-createDictionaryTests :: Test
-createDictionaryTests = TestList [
+dictionaryTests :: Test
+dictionaryTests = TestList [
   testCreateEmptyDictionary
   ]
 

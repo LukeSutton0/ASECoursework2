@@ -58,3 +58,4 @@ tests:
     dependencies:
     - ASECoursework2
     - HUnit
+    - QuickCheck
