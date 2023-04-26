@@ -10,8 +10,9 @@ data BSTree k v = Empty | Node k v (BSTree k v) (BSTree k v) deriving (Eq, Show)
 createEmptyBSTree :: Ord k => BSTree k v
 createEmptyBSTree = Empty
 
-insertIntoBSTree :: Ord k => k -> v -> BSTree k v -> BSTree k v
-insertIntoBSTree key value tree = Node 1 "My Value for the inserted node" Empty Empty
+insertIntoBSTree :: (Num k, Ord k) => k -> v -> BSTree k v -> BSTree k v
+insertIntoBSTree key value Empty = Node 1 value Empty Empty
+insertIntoBSTree key value (Node k v left right) = Node k v left right
 
 -- insertIntoBSTree :: Ord k => k -> v -> BSTree k v -> BSTree k v
 -- insertIntoBSTree key value Empty = Node key value Empty Empty
