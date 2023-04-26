@@ -1,12 +1,12 @@
 import Test.HUnit
 
 import Lib --import so that we can test functions in Lib.hs
-import BinaryTreeTests (createBinaryTreeTests)
+import DictionaryTests (createDictionaryTests)
 
 main :: IO ()
 main = do
     runTestTT allTestsInSpec
-    _ <- runTestTT createBinaryTreeTests
+    _ <- runTestTT createDictionaryTests
     return()
 
 

@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       BinaryTree
+      Dictionary
       Lib
   other-modules:
       Paths_ASECoursework2
@@ -52,7 +53,7 @@ test-suite ASECoursework2-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      BinaryTreeTests
+      DictionaryTests
       Paths_ASECoursework2
   hs-source-dirs:
       test
