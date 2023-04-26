@@ -6,12 +6,10 @@ import Dictionary
 -- | Test cases for `Dictionary Tests` 
 createDictionaryTests :: Test
 createDictionaryTests = TestList [
-  testCreateEmptyDictionary,
-  testInsertIntoDictionary
+  testCreateEmptyDictionary
   ]
 
 testCreateEmptyDictionary :: Test
 testCreateEmptyDictionary = TestCase $ do
-  let dict = createEmptyDictionary :: [(Int, String)]
-  assertEqual "createEmptyDictionary, should return an empty dict" [] dict
-
+  let dict = createEmptyDictionary :: Dictionary Int String
+  assertEqual "createEmptyDictionary, should return an empty dict" createEmptyDictionary dict

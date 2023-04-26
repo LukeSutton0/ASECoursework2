@@ -1,9 +1,15 @@
 module Dictionary (
+    Dictionary,
+    -- emptyDictionary,
     createEmptyDictionary
 ) where
 
-import qualified BinaryTree
+import qualified BSTree as BST
 
 
-createEmptyDictionary :: Ord k => [(k, v)]
-createEmptyDictionary = BinaryTree.createEmptyDictionary
+type Dictionary k v = BST.BSTree k v
+createEmptyDictionary :: Ord k => Dictionary k v
+createEmptyDictionary = BST.createEmptyBSTree
+
+-- emptyDictionary :: Dictionary k v
+-- emptyDictionary = BST.Empty

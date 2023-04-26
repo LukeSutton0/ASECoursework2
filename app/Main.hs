@@ -1,6 +1,9 @@
 module Main (main) where
 
-import Lib
+
+import Dictionary
 
 main :: IO ()
-main = print (sqr 5)
+main = do
+  let emptyDict = createEmptyDictionary :: Dictionary Int String
+  print emptyDict
