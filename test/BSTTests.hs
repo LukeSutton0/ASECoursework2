@@ -7,8 +7,8 @@ import BSTree
 -- | Test cases for `Dictionary Tests` 
 binarySearchTreeTests :: Test
 binarySearchTreeTests = TestList [
-  testCreateEmptyBSTree
-  -- testInsertIntoBSTree
+  testCreateEmptyBSTree,
+  testInsertIntoBSTree
   ]
 
 testCreateEmptyBSTree :: Test
@@ -18,10 +18,11 @@ testCreateEmptyBSTree = TestCase $ do
 
 
 
--- testInsertIntoBSTree :: Test
--- testInsertIntoBSTree = TestCase $ do
---     let aTree = createEmptyBSTree :: BSTree Int String
---     let aTreeWithOneNode = insertIntoBSTree 1 "one" aTree
---     assertEqual "insertIntoBSTree, should return a tree with one node" (Node 1 "one" Empty Empty) aTreeWithOneNode
+testInsertIntoBSTree :: Test
+testInsertIntoBSTree = TestCase $ do
+    let aTree = createEmptyBSTree :: BSTree Int String
+    let aTreeWithANode = insertIntoBSTree 1 "My Value for the inserted node" aTree
+    assertEqual "insertIntoBSTree, should return a tree with one node" 
+      (Node 1 "My Value for the inserted node" Empty Empty) aTreeWithANode
 
 

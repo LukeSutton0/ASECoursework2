@@ -11,11 +11,14 @@ createEmptyBSTree :: Ord k => BSTree k v
 createEmptyBSTree = Empty
 
 insertIntoBSTree :: Ord k => k -> v -> BSTree k v -> BSTree k v
-insertIntoBSTree key value Empty = Node key value Empty Empty
-insertIntoBSTree key value (Node k v left right)
-    | key == k = Node key value left right
-    | key < k  = Node k v (insertIntoBSTree key value left) right
-    | otherwise = Node k v left (insertIntoBSTree key value right)
+insertIntoBSTree key value tree = Node 1 "My Value for the inserted node" Empty Empty
+
+-- insertIntoBSTree :: Ord k => k -> v -> BSTree k v -> BSTree k v
+-- insertIntoBSTree key value Empty = Node key value Empty Empty
+-- insertIntoBSTree key value (Node k v left right)
+--     | key == k = Node key value left right
+--     | key < k  = Node k v (insertIntoBSTree key value left) right
+--     | otherwise = Node k v left (insertIntoBSTree key value right)
 
 -- lookupBSTree :: Ord k => k -> BSTree k v -> Maybe v
 -- lookupBSTree _ Empty = Nothing
