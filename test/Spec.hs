@@ -6,11 +6,9 @@ import BSTTests (binarySearchTreeTests)
 
 main :: IO ()
 main = do
-    runTestTT allTestsInSpec
-
-    _ <- runTestTT dictionaryTests
-
+    -- runTestTT allTestsInSpec --use this for tests in this file
     _ <- runTestTT binarySearchTreeTests
+    -- _ <- runTestTT dictionaryTests    
     return()
 
 

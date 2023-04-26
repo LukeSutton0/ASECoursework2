@@ -14,3 +14,4 @@ testCreateEmptyDictionary :: Test
 testCreateEmptyDictionary = TestCase $ do
   let dict = createEmptyDictionary :: Dictionary Int String
   assertEqual "createEmptyDictionary, should return an empty dict" createEmptyDictionary dict
+
