@@ -37,3 +37,4 @@ listBSTreeVals (Node k v left right) = sortedLeft ++ [(k, v)] ++ sortedRight
   where
     sortedLeft = listBSTreeVals left
     sortedRight = listBSTreeVals right
+

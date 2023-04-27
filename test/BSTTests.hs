@@ -4,6 +4,8 @@ import Test.HUnit
 import Test.QuickCheck
 import BSTree
 import Debug.Trace
+import Data.List
+import Control.Monad
 -- Test cases for `binary Search Tree Tests` 
 binarySearchTreeTests :: Test
 binarySearchTreeTests = TestList [
@@ -27,22 +29,26 @@ testInsertIntoBSTree = TestCase $ do
 
 -- Generate a random BSTree with unique keys
 instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (BSTree k v) where
-  arbitrary = sized (\n -> genTree n [])
+  arbitrary = sized genTree
 
-genTree :: (Arbitrary k, Arbitrary v, Ord k) => Int -> [k] -> Gen (BSTree k v)
-genTree n usedKeys
-  | n > 0 = do
-    key <- arbitrary `suchThat` (`notElem` usedKeys)
-    item <- arbitrary
-    let leftKeys = filter (< key) usedKeys
-    let rightKeys = filter (> key) usedKeys
-    left <- genTree (n `div` 2) leftKeys
-    right <- genTree (n `div` 2) rightKeys
-    return (Node key item left right)
-  | otherwise = return Empty
+genTree :: (Arbitrary k, Arbitrary v, Ord k) => Int -> Gen (BSTree k v)
+genTree n  = do
+    key <- genUniqueKeys n
+    foldM (\tree k -> do
+      v <- arbitrary
+      return $ insertIntoBSTree k v tree) Empty key
+
+genUniqueKeys :: (Arbitrary k, Eq k) => Int -> Gen [k]
+genUniqueKeys n = fmap(take n . nub)(infiniteListOf arbitrary)
 
 
---prop_insertBSTree :: BSTree Int String -> Bool
+
+prop_createEmptyBSTree :: forall k v. (Ord k, Eq v) => BSTree k v -> k -> v -> Bool
+prop_createEmptyBSTree _ _ _ = isEmptyBSTree (createEmptyBSTree :: BSTree k v)
+
+isEmptyBSTree :: BSTree k v -> Bool
+isEmptyBSTree Empty = True
+isEmptyBSTree _ = False
 
 prop_insertIntoBSTree :: (Ord k, Eq v) => k -> v -> BSTree k v -> Bool
 prop_insertIntoBSTree key value tree =
@@ -63,23 +69,17 @@ prop_lookupBSTree tree =
     toList Empty = []
     toList (Node k v l r) = (k, v) : toList l ++ toList r
 
--- prop_listBSTreeVals :: BSTree Int String -> Bool
--- prop_listBSTreeVals tree =
---   let keyValues = listBSTreeVals tree
---   in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
-  
-
 prop_listBSTreeVals :: BSTree Int String -> Bool
 prop_listBSTreeVals tree =
   let keyValues = listBSTreeVals tree
   in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
      where
-       listBSTreeVals t = trace ("listBSTreeVals: " ++ show t) $
+       listBSTreeVals t = 
          case t of
            Empty -> []
            Node k v l r -> listBSTreeVals l ++ [(k, v)] ++ listBSTreeVals r
 
-
+--listBSTreeVals t = trace ("listBSTreeVals: " ++ show t) $
 
 bSTreeMain :: IO ()
 bSTreeMain = do
@@ -87,4 +87,5 @@ bSTreeMain = do
   quickCheck (prop_insertIntoBSTree :: Int -> String -> BSTree Int String -> Bool)
   quickCheck prop_lookupBSTree
   quickCheck prop_listBSTreeVals
+  quickCheck (prop_createEmptyBSTree :: BSTree Int String -> Int -> String -> Bool)
   --quickCheck testLookup
