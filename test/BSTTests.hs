@@ -42,6 +42,19 @@ genTree n
   | otherwise = return Empty --Empty or Node
 
 
+--prop_insertBSTree :: BSTree Int String -> Bool
+
+
+
+
+
+prop_insertIntoBSTree :: (Ord k, Eq v) => k -> v -> BSTree k v -> Bool
+prop_insertIntoBSTree key value tree =
+  let updatedTree = insertIntoBSTree key value tree
+  in lookupBSTree key updatedTree == Just value
+
+
+
 prop_lookupBSTree :: BSTree Int String -> Bool
 prop_lookupBSTree tree =
   let keyValues = toList tree
@@ -57,13 +70,18 @@ prop_lookupBSTree tree =
     toList (Node k v l r) = (k, v) : toList l ++ toList r
 
 
+prop_listBSTreeVals :: BSTree Int String -> Bool
+prop_listBSTreeVals tree =
+  let keyValues = listBSTreeVals tree
+  in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
 
 
 
 bSTreeMain :: IO ()
 bSTreeMain = do
   _ <- runTestTT binarySearchTreeTests --run all HUnit tests
-  -- quickCheck testInsertIntoBSTreeExists
+  quickCheck (prop_insertIntoBSTree :: Int -> String -> BSTree Int String -> Bool)
   quickCheck prop_lookupBSTree
+  verboseCheck prop_listBSTreeVals
   --quickCheck testLookupBSTree
   return()

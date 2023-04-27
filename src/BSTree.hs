@@ -2,6 +2,7 @@ module BSTree (
     createEmptyBSTree,
     insertIntoBSTree,
     lookupBSTree,
+    listBSTreeVals,
     BSTree(..)
 ) where
 
@@ -23,10 +24,13 @@ insertIntoBSTree key value (Node k v left right)
     | otherwise = Node k v left (insertIntoBSTree key value right)
 
 
-
 lookupBSTree :: Ord k => k -> BSTree k v -> Maybe v
 lookupBSTree _ Empty = Nothing
 lookupBSTree key (Node k v left right)
     | key == k = Just v
     | key < k  = lookupBSTree key left
     | otherwise = lookupBSTree key right
+
+listBSTreeVals :: BSTree k v -> [(k, v)]
+listBSTreeVals Empty = []
+listBSTreeVals (Node k v left right) = listBSTreeVals left ++ [(k, v)] ++ listBSTreeVals right
