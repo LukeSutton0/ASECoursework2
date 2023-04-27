@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module BSTTests (bSTreeMain) where
 
 import Test.HUnit
@@ -23,37 +24,35 @@ testInsertIntoBSTree = TestCase $ do
       (Node 1 "My Value for the inserted node" Empty Empty) aTreeWithANode
 
 -- QuickCheck tests for `binary Search Tree Tests`
--- Generate binary search trees with at most `n` nodes
-genBSTree :: Int -> Gen (BSTree Int String)
-genBSTree n = genBSTree' n []
-  where
-    genBSTree' :: Int -> [Int] -> Gen (BSTree Int String)
-    genBSTree' 0 _ = return Empty
-    genBSTree' n usedKeys = frequency [
-        (1, return Empty),
-        (6, do 
-            k <- choose (1, n)
-            k <- uniqueKey k usedKeys
-            v <- resize 5 $ listOf $ elements ['a'..'z']
-            let newUsedKeys = k : usedKeys
-            l <- genBSTree' (n `div` 2) newUsedKeys
-            r <- genBSTree' (n `div` 2) newUsedKeys
-            return $ Node k v l r)]
 
-    uniqueKey :: Int -> [Int] -> Gen Int --make sure key is unique
-    uniqueKey k usedKeys
-      | k `elem` usedKeys = do
-          newK <- choose (1, length usedKeys)
-          uniqueKey newK usedKeys
-      | otherwise = return k
+genBSTree :: (Arbitrary k, Arbitrary v, Ord k) => Gen (BSTree k v)
+genBSTree = sized $ \n ->
+  if n == 0
+    then return Empty
+    else do
+      (kl, vl, kr, vr) <- splitList n <$> arbitrary
+      k <- arbitrary
+      v <- arbitrary
+      l <- genBSTree' kl
+      r <- genBSTree' kr
+      return $ Node k (v :: v) l r
+
+genBSTree' :: (Arbitrary k, Arbitrary v, Ord k) => [Int] -> Gen (BSTree k v)
+genBSTree' [] = return Empty
+genBSTree' (x:xs) = do
+  k <- arbitrary
+  v <- arbitrary
+  l <- genBSTree' [i | i <- xs, i < x]
+  r <- genBSTree' [i - x - 1 | i <- xs, i > x]
+  return $ Node k (v :: v) l r
 
 testInsertIntoBSTreeExists :: Property
 testInsertIntoBSTreeExists =
-  forAll (genBSTree 100) $ \t -> -- random tree with at most 100 nodes
-    forAll arbitrary $ \k -> -- random key
-      forAll arbitrary $ \v -> -- random value
-        let newT = insertIntoBSTree k v t -- insert key-value pair into tree
-        in existsInBSTree k newT -- check if key exists in new tree
+  forAll genBSTree $ \t -> 
+    forAll arbitrary $ \k -> 
+      forAll arbitrary $ \v -> 
+        let newT = insertIntoBSTree k v t 
+        in existsInBSTree k newT 
 
 existsInBSTree :: Ord k => k -> BSTree k v -> Bool
 existsInBSTree _ Empty = False
@@ -64,19 +63,23 @@ existsInBSTree k (Node k' _ l r)
 
 testLookupBSTree :: Property
 testLookupBSTree =
-  forAll (genBSTree 10) $ \t -> -- random tree with at most 100 nodes
+  forAll genBSTree $ \t -> 
     case t of
-      Empty -> property True -- skip if tree is empty
+      Empty -> property True 
       _ ->
-        forAll arbitrary $ \k -> -- generates random key
-          let expected = lookup k (getKeyValuePairs t) --tries to find the key in the tree if not found returns nothing
-              actual = lookupBSTree k t --
+        forAll arbitrary $ \k -> 
+          let expected = lookup k (getKeyValuePairs t); actual = lookupBSTree k t
+
           in counterexample (show (k, expected, actual)) $
-             (existsInBSTree k t && actual == expected) || (not (existsInBSTree k t) && actual == Nothing)
+             (existsInBSTree k t && actual == expected) || (not (existsInBSTree k t) && actual == Nothing) 
 
 getKeyValuePairs :: BSTree k v -> [(k, v)]
 getKeyValuePairs Empty = []
 getKeyValuePairs (Node k v l r) = getKeyValuePairs l ++ [(k, v)] ++ getKeyValuePairs r
+
+--returns list of key value pairs
+
+
 
 
 
@@ -84,5 +87,73 @@ bSTreeMain :: IO ()
 bSTreeMain = do
   -- _ <- runTestTT binarySearchTreeTests --run all HUnit tests
   quickCheck testInsertIntoBSTreeExists
-  --quickCheck testLookupBSTree
   quickCheck testLookupBSTree
+  --verboseCheck testLookupBSTree
+
+
+
+  -- Generate binary search trees with at most `n` nodes
+-- genBSTree :: (Arbitrary k, Ord k) => Int -> Gen (BSTree k String)
+-- genBSTree n = genBSTree' n []
+--   where
+--     genBSTree' :: (Arbitrary k, Ord k) => Int -> [k] -> Gen (BSTree k String)
+--     genBSTree' 0 _ = return Empty
+--     genBSTree' n usedKeys = frequency [
+--         (1, return Empty),
+--         (6, do 
+--             k <- uniqueKey usedKeys
+--             v <- resize 5 $ listOf $ elements ['a'..'z']
+--             let newUsedKeys = k : usedKeys
+--             l <- genBSTree' (n `div` 2) newUsedKeys
+--             r <- genBSTree' (n `div` 2) newUsedKeys
+--             return $ Node k v l r)]
+
+--     uniqueKey :: (Arbitrary k, Ord k) => [k] -> Gen k
+--     uniqueKey usedKeys = do
+--         k <- arbitrary
+--         if k `elem` usedKeys
+--             then uniqueKey usedKeys
+--             else return k
+
+-- genBSTreeInt :: Int -> Gen (BSTree Int String)
+-- genBSTreeInt n = genBSTree' n []
+--   where
+--     genBSTree' :: Int -> [Int] -> Gen (BSTree Int String)
+--     genBSTree' 0 _ = return Empty
+--     genBSTree' n usedKeys = frequency [
+--         (1, return Empty),
+--         (6, do 
+--             k <- uniqueKey usedKeys
+--             v <- resize 5 $ listOf $ elements ['a'..'z']
+--             let newUsedKeys = k : usedKeys
+--             l <- genBSTree' (n `div` 2) newUsedKeys
+--             r <- genBSTree' (n `div` 2) newUsedKeys
+--             return $ Node k v l r)]
+
+--     uniqueKey :: [Int] -> Gen Int
+--     uniqueKey usedKeys = do
+--         k <- arbitrary
+--         if k `elem` usedKeys
+--             then uniqueKey usedKeys --addd
+--             else return k
+
+-- genBSTreeString :: Gen (BSTree String String)
+-- genBSTreeString = genBSTree' []
+--   where
+--     genBSTree' :: [String] -> Gen (BSTree String String)
+--     genBSTree' usedKeys = frequency [
+--         (1, return Empty),
+--         (6, do 
+--             k <- uniqueKey usedKeys
+--             v <- resize 5 $ listOf $ elements ['a'..'z']
+--             let newUsedKeys = k : usedKeys
+--             l <- genBSTree' newUsedKeys
+--             r <- genBSTree' newUsedKeys
+--             return $ Node k v l r)]
+
+--     uniqueKey :: [String] -> Gen String
+--     uniqueKey usedKeys = do
+--         k <- resize 5 $ listOf $ elements ['a'..'z']
+--         if k `elem` usedKeys
+--             then uniqueKey usedKeys
+--             else return k

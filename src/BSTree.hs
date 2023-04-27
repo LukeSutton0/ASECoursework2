@@ -25,8 +25,9 @@ insertIntoBSTree key value (Node k v left right)
 
 
 lookupBSTree :: Ord k => k -> BSTree k v -> Maybe v
-lookupBSTree _ Empty = Nothing
+lookupBSTree _ Empty = Nothing --if key not in tree return nothing
 lookupBSTree key (Node k v left right)
     | key == k = Just v
     | key < k  = lookupBSTree key left
     | otherwise = lookupBSTree key right
+
