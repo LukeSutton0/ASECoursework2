@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module BSTTests (bSTreeMain) where
 
 import Test.HUnit
@@ -6,6 +7,9 @@ import BSTree
 import Debug.Trace
 import Data.List
 import Control.Monad
+import Data.Foldable (Foldable(toList))
+import Data.Maybe (isNothing)
+
 -- Test cases for `binary Search Tree Tests` 
 binarySearchTreeTests :: Test
 binarySearchTreeTests = TestList [
@@ -40,8 +44,6 @@ genTree n  = do
 
 genUniqueKeys :: (Arbitrary k, Eq k) => Int -> Gen [k]
 genUniqueKeys n = fmap(take n . nub)(infiniteListOf arbitrary)
-
-
 
 prop_createEmptyBSTree :: forall k v. (Ord k, Eq v) => BSTree k v -> k -> v -> Bool
 prop_createEmptyBSTree _ _ _ = isEmptyBSTree (createEmptyBSTree :: BSTree k v)
@@ -81,6 +83,25 @@ prop_listBSTreeVals tree =
 
 --listBSTreeVals t = trace ("listBSTreeVals: " ++ show t) $
 
+prop_removeFromBSTree :: (Ord k, Eq v) => k -> BSTree k v -> Bool
+prop_removeFromBSTree k t =
+  let t' = removeFromBSTree k t
+  in not (memberBSTree k t') && all (\(k', v') -> lookupBSTree k' t' == Just v') (listBSTreeVals t')
+
+memberBSTree :: Ord k => k -> BSTree k v -> Bool
+memberBSTree _ Empty = False
+memberBSTree k (Node k' _ l r)
+  | k == k' = True
+  | k < k'  = memberBSTree k l
+  | otherwise = memberBSTree k r
+
+
+
+prop_removeEntriesIf :: Ord k => (k -> v -> Bool) -> BSTree k v -> Bool
+prop_removeEntriesIf p tree = all (\(k,v) -> not (p k v)) (listBSTreeVals tree')
+    where tree' = removeEntriesIf p tree
+
+
 bSTreeMain :: IO ()
 bSTreeMain = do
   _ <- runTestTT binarySearchTreeTests --run all HUnit tests
@@ -88,4 +109,5 @@ bSTreeMain = do
   quickCheck prop_lookupBSTree
   quickCheck prop_listBSTreeVals
   quickCheck (prop_createEmptyBSTree :: BSTree Int String -> Int -> String -> Bool)
-  --quickCheck testLookup
+  quickCheck (prop_removeFromBSTree :: Int -> BSTree Int String -> Bool)
+
