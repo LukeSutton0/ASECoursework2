@@ -1,6 +1,7 @@
 module BSTree (
     createEmptyBSTree,
     insertIntoBSTree,
+    lookupBSTree,
     BSTree(..)
 ) where
 
@@ -21,9 +22,11 @@ insertIntoBSTree key value (Node k v left right)
     | key < k  = Node k v (insertIntoBSTree key value left) right
     | otherwise = Node k v left (insertIntoBSTree key value right)
 
--- lookupBSTree :: Ord k => k -> BSTree k v -> Maybe v
--- lookupBSTree _ Empty = Nothing
--- lookupBSTree key (Node k v left right)
---     | key == k = Just v
---     | key < k  = lookupBSTree key left
---     | otherwise = lookupBSTree key right
+
+
+lookupBSTree :: Ord k => k -> BSTree k v -> Maybe v
+lookupBSTree _ Empty = Nothing
+lookupBSTree key (Node k v left right)
+    | key == k = Just v
+    | key < k  = lookupBSTree key left
+    | otherwise = lookupBSTree key right
