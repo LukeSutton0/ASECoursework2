@@ -31,6 +31,9 @@ lookupBSTree key (Node k v left right)
     | key < k  = lookupBSTree key left
     | otherwise = lookupBSTree key right
 
-listBSTreeVals :: BSTree k v -> [(k, v)]
+listBSTreeVals :: (Ord k) => BSTree k v -> [(k, v)]
 listBSTreeVals Empty = []
-listBSTreeVals (Node k v left right) = listBSTreeVals left ++ [(k, v)] ++ listBSTreeVals right
+listBSTreeVals (Node k v left right) = sortedLeft ++ [(k, v)] ++ sortedRight
+  where
+    sortedLeft = listBSTreeVals left
+    sortedRight = listBSTreeVals right

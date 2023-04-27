@@ -3,7 +3,7 @@ module BSTTests (bSTreeMain) where
 import Test.HUnit
 import Test.QuickCheck
 import BSTree
-
+import Debug.Trace
 -- Test cases for `binary Search Tree Tests` 
 binarySearchTreeTests :: Test
 binarySearchTreeTests = TestList [
@@ -26,34 +26,28 @@ testInsertIntoBSTree = TestCase $ do
 -- Generate binary search trees with at most `n` nodes
 
 -- Generate a random BSTree with unique keys
+instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (BSTree k v) where
+  arbitrary = sized (\n -> genTree n [])
 
-
-
-instance (Arbitrary key, Arbitrary item) => Arbitrary (BSTree key item) where
-  arbitrary = sized genTree
-
-genTree n 
+genTree :: (Arbitrary k, Arbitrary v, Ord k) => Int -> [k] -> Gen (BSTree k v)
+genTree n usedKeys
   | n > 0 = do
-    key <- arbitrary
+    key <- arbitrary `suchThat` (`notElem` usedKeys)
     item <- arbitrary
-    left <- genTree (n `div` 2)
-    right <- genTree (n `div` 2)
+    let leftKeys = filter (< key) usedKeys
+    let rightKeys = filter (> key) usedKeys
+    left <- genTree (n `div` 2) leftKeys
+    right <- genTree (n `div` 2) rightKeys
     return (Node key item left right)
-  | otherwise = return Empty --Empty or Node
+  | otherwise = return Empty
 
 
 --prop_insertBSTree :: BSTree Int String -> Bool
-
-
-
-
 
 prop_insertIntoBSTree :: (Ord k, Eq v) => k -> v -> BSTree k v -> Bool
 prop_insertIntoBSTree key value tree =
   let updatedTree = insertIntoBSTree key value tree
   in lookupBSTree key updatedTree == Just value
-
-
 
 prop_lookupBSTree :: BSTree Int String -> Bool
 prop_lookupBSTree tree =
@@ -69,11 +63,21 @@ prop_lookupBSTree tree =
     toList Empty = []
     toList (Node k v l r) = (k, v) : toList l ++ toList r
 
+-- prop_listBSTreeVals :: BSTree Int String -> Bool
+-- prop_listBSTreeVals tree =
+--   let keyValues = listBSTreeVals tree
+--   in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
+  
 
 prop_listBSTreeVals :: BSTree Int String -> Bool
 prop_listBSTreeVals tree =
   let keyValues = listBSTreeVals tree
   in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
+     where
+       listBSTreeVals t = trace ("listBSTreeVals: " ++ show t) $
+         case t of
+           Empty -> []
+           Node k v l r -> listBSTreeVals l ++ [(k, v)] ++ listBSTreeVals r
 
 
 
@@ -82,6 +86,5 @@ bSTreeMain = do
   _ <- runTestTT binarySearchTreeTests --run all HUnit tests
   quickCheck (prop_insertIntoBSTree :: Int -> String -> BSTree Int String -> Bool)
   quickCheck prop_lookupBSTree
-  verboseCheck prop_listBSTreeVals
-  --quickCheck testLookupBSTree
-  return()
+  quickCheck prop_listBSTreeVals
+  --quickCheck testLookup
