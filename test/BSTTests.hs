@@ -1,8 +1,14 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 module BSTTests (bSTreeMain) where
 
 import Test.HUnit
 import Test.QuickCheck
 import BSTree
+import Debug.Trace
+import Data.List
+import Control.Monad
+import Data.Foldable (Foldable(toList))
+import Data.Maybe (isNothing)
 
 -- Test cases for `binary Search Tree Tests` 
 binarySearchTreeTests :: Test
@@ -24,65 +30,84 @@ testInsertIntoBSTree = TestCase $ do
 
 -- QuickCheck tests for `binary Search Tree Tests`
 -- Generate binary search trees with at most `n` nodes
-genBSTree :: Int -> Gen (BSTree Int String)
-genBSTree n = genBSTree' n []
+
+-- Generate a random BSTree with unique keys
+instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (BSTree k v) where
+  arbitrary = sized genTree
+
+genTree :: (Arbitrary k, Arbitrary v, Ord k) => Int -> Gen (BSTree k v)
+genTree n  = do
+    key <- genUniqueKeys n
+    foldM (\tree k -> do
+      v <- arbitrary
+      return $ insertIntoBSTree k v tree) Empty key
+
+genUniqueKeys :: (Arbitrary k, Eq k) => Int -> Gen [k]
+genUniqueKeys n = fmap(take n . nub)(infiniteListOf arbitrary)
+
+prop_createEmptyBSTree :: forall k v. (Ord k, Eq v) => BSTree k v -> k -> v -> Bool
+prop_createEmptyBSTree _ _ _ = isEmptyBSTree (createEmptyBSTree :: BSTree k v)
+
+isEmptyBSTree :: BSTree k v -> Bool
+isEmptyBSTree Empty = True
+isEmptyBSTree _ = False
+
+prop_insertIntoBSTree :: (Ord k, Eq v) => k -> v -> BSTree k v -> Bool
+prop_insertIntoBSTree key value tree =
+  let updatedTree = insertIntoBSTree key value tree
+  in lookupBSTree key updatedTree == Just value
+
+prop_lookupBSTree :: BSTree Int String -> Bool
+prop_lookupBSTree tree =
+  let keyValues = toList tree
+  in case keyValues of
+       [] -> lookupBSTree 0 tree == Nothing
+       _  -> let (k, v) = head keyValues
+                 lookupResult = lookupBSTree k tree
+             in case lookupResult of
+                  Nothing -> False
+                  Just value -> value == v
   where
-    genBSTree' :: Int -> [Int] -> Gen (BSTree Int String)
-    genBSTree' 0 _ = return Empty
-    genBSTree' n usedKeys = frequency [
-        (1, return Empty),
-        (6, do 
-            k <- choose (1, n)
-            k <- uniqueKey k usedKeys
-            v <- resize 5 $ listOf $ elements ['a'..'z']
-            let newUsedKeys = k : usedKeys
-            l <- genBSTree' (n `div` 2) newUsedKeys
-            r <- genBSTree' (n `div` 2) newUsedKeys
-            return $ Node k v l r)]
+    toList Empty = []
+    toList (Node k v l r) = (k, v) : toList l ++ toList r
 
-    uniqueKey :: Int -> [Int] -> Gen Int --make sure key is unique
-    uniqueKey k usedKeys
-      | k `elem` usedKeys = do
-          newK <- choose (1, length usedKeys)
-          uniqueKey newK usedKeys
-      | otherwise = return k
+prop_listBSTreeVals :: BSTree Int String -> Bool
+prop_listBSTreeVals tree =
+  let keyValues = listBSTreeVals tree
+  in all (\(k, v) -> lookupBSTree k tree == Just v) keyValues
+     where
+       listBSTreeVals t = 
+         case t of
+           Empty -> []
+           Node k v l r -> listBSTreeVals l ++ [(k, v)] ++ listBSTreeVals r
 
-testInsertIntoBSTreeExists :: Property
-testInsertIntoBSTreeExists =
-  forAll (genBSTree 100) $ \t -> -- random tree with at most 100 nodes
-    forAll arbitrary $ \k -> -- random key
-      forAll arbitrary $ \v -> -- random value
-        let newT = insertIntoBSTree k v t -- insert key-value pair into tree
-        in existsInBSTree k newT -- check if key exists in new tree
+--listBSTreeVals t = trace ("listBSTreeVals: " ++ show t) $
 
-existsInBSTree :: Ord k => k -> BSTree k v -> Bool
-existsInBSTree _ Empty = False
-existsInBSTree k (Node k' _ l r)
+prop_removeFromBSTree :: (Ord k, Eq v) => k -> BSTree k v -> Bool
+prop_removeFromBSTree k t =
+  let t' = removeFromBSTree k t
+  in not (memberBSTree k t') && all (\(k', v') -> lookupBSTree k' t' == Just v') (listBSTreeVals t')
+
+memberBSTree :: Ord k => k -> BSTree k v -> Bool
+memberBSTree _ Empty = False
+memberBSTree k (Node k' _ l r)
   | k == k' = True
-  | k < k' = existsInBSTree k l
-  | otherwise = existsInBSTree k r
+  | k < k'  = memberBSTree k l
+  | otherwise = memberBSTree k r
 
-testLookupBSTree :: Property
-testLookupBSTree =
-  forAll (genBSTree 10) $ \t -> -- random tree with at most 100 nodes
-    case t of
-      Empty -> property True -- skip if tree is empty
-      _ ->
-        forAll arbitrary $ \k -> -- generates random key
-          let expected = lookup k (getKeyValuePairs t) --tries to find the key in the tree if not found returns nothing
-              actual = lookupBSTree k t --
-          in counterexample (show (k, expected, actual)) $
-             (existsInBSTree k t && actual == expected) || (not (existsInBSTree k t) && actual == Nothing)
 
-getKeyValuePairs :: BSTree k v -> [(k, v)]
-getKeyValuePairs Empty = []
-getKeyValuePairs (Node k v l r) = getKeyValuePairs l ++ [(k, v)] ++ getKeyValuePairs r
 
+prop_removeEntriesIf :: Ord k => (k -> v -> Bool) -> BSTree k v -> Bool
+prop_removeEntriesIf p tree = all (\(k,v) -> not (p k v)) (listBSTreeVals tree')
+    where tree' = removeEntriesIf p tree
 
 
 bSTreeMain :: IO ()
 bSTreeMain = do
-  -- _ <- runTestTT binarySearchTreeTests --run all HUnit tests
-  quickCheck testInsertIntoBSTreeExists
-  --quickCheck testLookupBSTree
-  quickCheck testLookupBSTree
+  _ <- runTestTT binarySearchTreeTests --run all HUnit tests
+  quickCheck (prop_insertIntoBSTree :: Int -> String -> BSTree Int String -> Bool)
+  quickCheck prop_lookupBSTree
+  quickCheck prop_listBSTreeVals
+  quickCheck (prop_createEmptyBSTree :: BSTree Int String -> Int -> String -> Bool)
+  quickCheck (prop_removeFromBSTree :: Int -> BSTree Int String -> Bool)
+
