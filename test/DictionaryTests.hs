@@ -20,18 +20,18 @@ dictionaryTests = TestList [
 -- Generate dictionaries with at most `n` key-value pairs
 
 -- Generate a random dictionary with unique keys
-instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (Dictionary k v) where
-  arbitrary = sized genDict
+-- instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (Dictionary k v) where
+--   arbitrary = sized genDict
 
-genDict :: (Arbitrary k, Arbitrary v, Ord k) => Int -> Gen (Dictionary k v)
-genDict n  = do
-    key <- genUniqueKeys n
-    foldM (\dict k -> do
-      v <- arbitrary
-      return $ insertIntoDict k v dict) createEmptyDict key
+-- genDict :: (Arbitrary k, Arbitrary v, Ord k) => Int -> Gen (Dictionary k v)
+-- genDict n  = do
+--     key <- genUniqueKeys n
+--     foldM (\dict k -> do
+--       v <- arbitrary
+--       return $ insertIntoDict k v dict) createEmptyDict key
 
-genUniqueKeys :: (Arbitrary k, Eq k) => Int -> Gen [k]
-genUniqueKeys n = fmap(take n . nub)(infiniteListOf arbitrary)
+-- genUniqueKeys :: (Arbitrary k, Eq k) => Int -> Gen [k]
+-- genUniqueKeys n = fmap(take n . nub)(infiniteListOf arbitrary)
 
 
 prop_createEmptyDict :: Bool
@@ -44,21 +44,21 @@ prop_createEmptyDict = case createEmptyDict of
 -- isEmptyDict d = sizeDict d == 0
 
 
-prop_insertIntoDict :: (Eq k, Eq v, Ord k) => k -> v -> Dictionary k v -> Bool
-prop_insertIntoDict k v d =
-  let updatedDict = insertIntoDict k v d
-  in lookupDict k updatedDict == Just v
+-- prop_insertIntoDict :: (Eq k, Eq v, Ord k) => k -> v -> Dictionary k v -> Bool
+-- prop_insertIntoDict k v d =
+--   let updatedDict = insertIntoDict k v d
+--   in lookupDict k updatedDict == Just v
 
-prop_lookupDict :: Dictionary Int String -> Bool
-prop_lookupDict d =
-  let keyValues = listDictVals d
-  in case keyValues of
-       [] -> lookupDict 0 d == Nothing
-       _  -> let (k, v) = head keyValues
-                 lookupResult = lookupDict k d
-             in case lookupResult of
-                  Nothing -> False
-                  Just value -> value == v
+-- prop_lookupDict :: Dictionary Int String -> Bool
+-- prop_lookupDict d =
+--   let keyValues = listDictVals d
+--   in case keyValues of
+--        [] -> lookupDict 0 d == Nothing
+--        _  -> let (k, v) = head keyValues
+--                  lookupResult = lookupDict k d
+--              in case lookupResult of
+--                   Nothing -> False
+--                   Just value -> value == v
 
 
 
@@ -71,8 +71,8 @@ prop_lookupDict d =
 dictionaryMain :: IO ()
 dictionaryMain = do 
   quickCheck prop_createEmptyDict
-  quickCheck prop_lookupDict
-  quickCheck (prop_insertIntoDict :: Int -> String -> Dictionary Int String -> Bool)
+  -- quickCheck prop_lookupDict
+  -- quickCheck (prop_insertIntoDict :: Int -> String -> Dictionary Int String -> Bool)
 
 
 

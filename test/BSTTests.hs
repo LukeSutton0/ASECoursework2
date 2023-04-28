@@ -96,7 +96,9 @@ memberBSTree k (Node k' _ l r)
 prop_removeEntriesIf :: Ord k => (k -> v -> Bool) -> BSTree k v -> Bool
 prop_removeEntriesIf p tree = all (\(k,v) -> not (p k v)) (listBSTreeVals tree')
     where tree' = removeEntriesIf p tree
-
+    
+instance Show (Int -> String -> Bool) where
+  show _ = "<function>"
 
 bSTreeMain :: IO ()
 bSTreeMain = do
@@ -105,5 +107,6 @@ bSTreeMain = do
   quickCheck prop_lookupBSTree
   quickCheck prop_listBSTreeVals
   quickCheck (prop_createEmptyBSTree :: BSTree Int String -> Int -> String -> Bool)
+  quickCheck (prop_removeFromBSTree :: Int -> BSTree Int String -> Bool)
   quickCheck (prop_removeFromBSTree :: Int -> BSTree Int String -> Bool)
 
