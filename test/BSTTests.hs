@@ -4,11 +4,9 @@ module BSTTests (bSTreeMain) where
 import Test.HUnit
 import Test.QuickCheck
 import BSTree
-import Debug.Trace
 import Data.List
 import Control.Monad
-import Data.Foldable (Foldable(toList))
-import Data.Maybe (isNothing)
+
 
 -- Test cases for `binary Search Tree Tests` 
 binarySearchTreeTests :: Test
@@ -53,9 +51,9 @@ isEmptyBSTree Empty = True
 isEmptyBSTree _ = False
 
 prop_insertIntoBSTree :: (Ord k, Eq v) => k -> v -> BSTree k v -> Bool
-prop_insertIntoBSTree key value tree =
-  let updatedTree = insertIntoBSTree key value tree
-  in lookupBSTree key updatedTree == Just value
+prop_insertIntoBSTree k v tree =
+  let updatedTree = insertIntoBSTree k v tree
+  in lookupBSTree k updatedTree == Just v
 
 prop_lookupBSTree :: BSTree Int String -> Bool
 prop_lookupBSTree tree =
@@ -94,8 +92,6 @@ memberBSTree k (Node k' _ l r)
   | k == k' = True
   | k < k'  = memberBSTree k l
   | otherwise = memberBSTree k r
-
-
 
 prop_removeEntriesIf :: Ord k => (k -> v -> Bool) -> BSTree k v -> Bool
 prop_removeEntriesIf p tree = all (\(k,v) -> not (p k v)) (listBSTreeVals tree')
